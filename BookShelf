@@ -1,0 +1,382 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My First Book Library</title>
+    <!-- Load Tailwind CSS for easy, modern, responsive styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Google Font 'Inter' for clean, modern typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Set the default font for the entire website */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* Soft light gray background */
+        }
+
+        /* Subtle smooth animation when hovering over a book card */
+        .book-card {
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+        .book-card:hover {
+            transform: translateY(-6px); /* Moves the card slightly up */
+            box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.15);
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <!-- ==========================================
+         1. HEADER & SEARCH BAR SECTION
+         ========================================== -->
+    <header class="bg-white shadow-sm sticky top-0 z-10">
+        <div class="max-w-6xl mx-auto px-4 py-6 flex flex-col md:flex-row items-center justify-between gap-4">
+            
+            <!-- Website Title & Logo -->
+            <div class="flex items-center gap-3">
+                <span class="text-3xl">📚</span>
+                <div>
+                    <h1 class="text-2xl font-bold text-indigo-600">Cozy Reads</h1>
+                    <p class="text-xs text-slate-500">A curated collection of 10 great books</p>
+                </div>
+            </div>
+
+            <!-- Search Bar & Favorites Counter -->
+            <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+                <!-- Search Input -->
+                <div class="relative w-full sm:w-72">
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        placeholder="Search by title or author..." 
+                        class="w-full pl-10 pr-4 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition"
+                    >
+                    <!-- Simple Magnifying Glass Emoji -->
+                    <span class="absolute left-3.5 top-2.5 text-slate-400">🔍</span>
+                </div>
+
+                <!-- Favorites Counter Badge -->
+                <div class="bg-rose-50 text-rose-600 border border-rose-200 px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 whitespace-nowrap">
+                    <span>❤️ Favorites:</span>
+                    <span id="favCount" class="bg-rose-600 text-white px-2 py-0.5 rounded-full text-xs">0</span>
+                </div>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- ==========================================
+         2. MAIN CONTENT: BOOK GRID
+         ========================================== -->
+    <main class="max-w-6xl mx-auto px-4 py-8 flex-grow w-full">
+        
+        <!-- Section Title -->
+        <div class="mb-6 flex items-center justify-between">
+            <h2 class="text-xl font-semibold text-slate-700">Featured Books</h2>
+            <span id="resultCount" class="text-sm text-slate-500">Showing 10 books</span>
+        </div>
+
+        <!-- Responsive Grid Container: 1 column on mobile, 2 on tablet, 4 on desktop -->
+        <div id="bookGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- JavaScript will automatically create and insert the 10 book cards here! -->
+        </div>
+
+        <!-- Empty Search Message (Hidden by default) -->
+        <div id="noResults" class="hidden text-center py-16">
+            <p class="text-4xl mb-3">🕵️‍♂️</p>
+            <h3 class="text-lg font-semibold text-slate-700">No books found</h3>
+            <p class="text-slate-500 text-sm">Try searching for a different title or author name.</p>
+        </div>
+
+    </main>
+
+    <!-- ==========================================
+         3. MODAL POPUP (For "View Details")
+         ========================================== -->
+    <!-- Hidden by default using 'hidden' class -->
+    <div id="bookModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative animate-fade-in">
+            
+            <!-- Close Button (Top Right) -->
+            <button onclick="closeModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold transition">
+                ✕
+            </button>
+
+            <!-- Modal Content (Populated by JavaScript) -->
+            <div class="flex flex-col items-center text-center">
+                <div id="modalCover" class="w-32 h-44 rounded-xl shadow-md mb-4 flex items-center justify-center text-white font-bold text-3xl">
+                    📖
+                </div>
+                <span id="modalCategory" class="text-xs font-semibold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full mb-2">
+                    Category
+                </span>
+                <h3 id="modalTitle" class="text-xl font-bold text-slate-800 mb-1">Book Title</h3>
+                <p id="modalAuthor" class="text-sm text-slate-500 mb-4">by Author Name</p>
+                
+                <p id="modalDescription" class="text-sm text-slate-600 leading-relaxed mb-6 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    Book summary goes here.
+                </p>
+
+                <button onclick="closeModal()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition">
+                    Close Details
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         4. SIMPLE FOOTER
+         ========================================== -->
+    <footer class="bg-white border-t border-slate-200 py-6 text-center text-sm text-slate-500 mt-12">
+        <p>Built with HTML, CSS & Beginner-Friendly JavaScript 🚀</p>
+    </footer>
+
+    <!-- ==========================================
+         5. JAVASCRIPT LOGIC (Well-Commented!)
+         ========================================== -->
+    <script>
+        // STEP 1: Create an Array (list) of 10 Book Objects
+        // Each book has an id, title, author, category, coverColor, description, and isFavorite status.
+        const books = [
+            {
+                id: 1,
+                title: "The Hobbit",
+                author: "J.R.R. Tolkien",
+                category: "Fantasy",
+                color: "bg-emerald-600",
+                description: "Bilbo Baggins, a comfort-loving hobbit, is swept into an epic quest to reclaim the lost Dwarf Kingdom of Erebor from the fearsome dragon Smaug."
+            },
+            {
+                id: 2,
+                title: "Atomic Habits",
+                author: "James Clear",
+                category: "Self-Help",
+                color: "bg-amber-500",
+                description: "A practical guide on how tiny, everyday changes can compound into remarkable personal and professional results over time."
+            },
+            {
+                id: 3,
+                title: "Dune",
+                author: "Frank Herbert",
+                category: "Sci-Fi",
+                color: "bg-orange-600",
+                description: "Set on the desert planet Arrakis, young Paul Atreides must navigate political betrayal and ancient prophecies to protect the universe's most valuable resource."
+            },
+            {
+                id: 4,
+                title: "1984",
+                author: "George Orwell",
+                category: "Classic",
+                color: "bg-slate-700",
+                description: "A chilling dystopian novel about a totalitarian regime where Big Brother watches every move and independent thought is a crime."
+            },
+            {
+                id: 5,
+                title: "The Alchemist",
+                author: "Paulo Coelho",
+                category: "Fiction",
+                color: "bg-yellow-600",
+                description: "A young Andalusian shepherd named Santiago travels to the pyramids of Egypt after having a recurring dream of finding treasure."
+            },
+            {
+                id: 6,
+                title: "Sapiens",
+                author: "Yuval Noah Harari",
+                category: "History",
+                color: "bg-rose-600",
+                description: "An engaging brief history of humankind, exploring how Homo sapiens evolved from foraging bands to rulers of the modern world."
+            },
+            {
+                id: 7,
+                title: "The Great Gatsby",
+                author: "F. Scott Fitzgerald",
+                category: "Classic",
+                color: "bg-indigo-600",
+                description: "A tragic story of wealth, love, and the American Dream set in the roaring 1920s on Long Island."
+            },
+            {
+                id: 8,
+                title: "Clean Code",
+                author: "Robert C. Martin",
+                category: "Programming",
+                color: "bg-cyan-600",
+                description: "A must-read handbook for software developers explaining how to write clean, readable, and maintainable code."
+            },
+            {
+                id: 9,
+                title: "To Kill a Mockingbird",
+                author: "Harper Lee",
+                category: "Classic",
+                color: "bg-teal-600",
+                description: "Seen through the eyes of young Scout Finch, her father Atticus defends an innocent man in a deeply divided Southern town."
+            },
+            {
+                id: 10,
+                title: "Harry Potter",
+                author: "J.K. Rowling",
+                category: "Fantasy",
+                color: "bg-purple-600",
+                description: "An orphaned boy discovers on his eleventh birthday that he is a wizard and is invited to attend Hogwarts School of Witchcraft and Wizardry."
+            }
+        ];
+
+        // Keep track of which book IDs are marked as favorites using a simple Array
+        let favoriteIds = [];
+
+        // STEP 2: Grab HTML elements so JavaScript can control them
+        const bookGrid = document.getElementById("bookGrid");
+        const searchInput = document.getElementById("searchInput");
+        const favCount = document.getElementById("favCount");
+        const resultCount = document.getElementById("resultCount");
+        const noResults = document.getElementById("noResults");
+
+        // STEP 3: Function to display books on the screen
+        function displayBooks(bookList) {
+            // Clear the grid first before adding cards
+            bookGrid.innerHTML = "";
+
+            // Update the counter text (e.g., "Showing 10 books")
+            resultCount.textContent = `Showing ${bookList.length} book${bookList.length === 1 ? '' : 's'}`;
+
+            // Show or hide the "No books found" message
+            if (bookList.length === 0) {
+                noResults.classList.remove("hidden");
+            } else {
+                noResults.classList.add("hidden");
+            }
+
+            // Loop through each book in the list and build an HTML card
+            bookList.forEach(function(book) {
+                // Check if this book is currently in our favorites list
+                const isFav = favoriteIds.includes(book.id);
+
+                // Create a new <div> element for the card
+                const card = document.createElement("div");
+                card.className = "book-card bg-white rounded-2xl border border-slate-200 overflow-hidden flex flex-col justify-between";
+
+                // Fill the card with HTML content
+                card.innerHTML = `
+                    <div>
+                        <!-- Book Cover Placeholder (Styled with color & title) -->
+                        <div class="${book.color} h-44 p-5 flex flex-col justify-between text-white relative">
+                            <span class="text-xs font-semibold uppercase tracking-wider bg-black/20 px-2.5 py-1 rounded-lg self-start">
+                                ${book.category}
+                            </span>
+                            <h3 class="font-bold text-lg leading-snug drop-shadow-sm">
+                                ${book.title}
+                            </h3>
+                        </div>
+
+                        <!-- Book Info -->
+                        <div class="p-5">
+                            <p class="text-xs text-slate-400 uppercase font-semibold mb-1">Author</p>
+                            <p class="text-sm font-medium text-slate-700 mb-3">${book.author}</p>
+                            <p class="text-xs text-slate-500 line-clamp-2">${book.description}</p>
+                        </div>
+                    </div>
+
+                    <!-- Card Action Buttons -->
+                    <div class="px-5 pb-5 pt-2 flex items-center gap-2">
+                        <!-- View Details Button -->
+                        <button 
+                            onclick="openModal(${book.id})" 
+                            class="flex-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold text-xs py-2.5 px-3 rounded-xl transition cursor-pointer">
+                            View Details
+                        </button>
+
+                        <!-- Favorite (Heart) Button -->
+                        <button 
+                            onclick="toggleFavorite(${book.id})" 
+                            title="Add to Favorites"
+                            class="p-2.5 rounded-xl border transition cursor-pointer ${isFav ? 'bg-rose-50 border-rose-200 text-rose-600' : 'bg-slate-50 border-slate-200 text-slate-400 hover:text-rose-500'}">
+                            ${isFav ? '❤️' : '🤍'}
+                        </button>
+                    </div>
+                `;
+
+                // Add the finished card into the grid on the webpage
+                bookGrid.appendChild(card);
+            });
+        }
+
+        // STEP 4: Function to handle the Search Bar
+        searchInput.addEventListener("input", function(event) {
+            // Get what the user typed and convert it to lowercase for easy matching
+            const searchText = event.target.value.toLowerCase();
+
+            // Filter the original 'books' array
+            const filteredBooks = books.filter(function(book) {
+                const matchTitle = book.title.toLowerCase().includes(searchText);
+                const matchAuthor = book.author.toLowerCase().includes(searchText);
+                return matchTitle || matchAuthor; // Keep book if title OR author matches
+            });
+
+            // Re-draw the grid with only the matching books
+            displayBooks(filteredBooks);
+        });
+
+        // STEP 5: Function to add/remove a book from Favorites
+        function toggleFavorite(bookId) {
+            if (favoriteIds.includes(bookId)) {
+                // If already favorited, remove it from the array
+                favoriteIds = favoriteIds.filter(id => id !== bookId);
+            } else {
+                // Otherwise, add it to the array
+                favoriteIds.push(bookId);
+            }
+
+            // Update the favorite counter badge in the header
+            favCount.textContent = favoriteIds.length;
+
+            // Re-render the current search results so the heart icon updates immediately
+            const currentSearch = searchInput.value.toLowerCase();
+            const currentBooks = books.filter(b => 
+                b.title.toLowerCase().includes(currentSearch) || 
+                b.author.toLowerCase().includes(currentSearch)
+            );
+            displayBooks(currentBooks);
+        }
+
+        // STEP 6: Functions to Open and Close the "View Details" Modal
+        function openModal(bookId) {
+            // Find the exact book that was clicked
+            const book = books.find(b => b.id === bookId);
+            if (!book) return;
+
+            // Update modal text and colors
+            document.getElementById("modalTitle").textContent = book.title;
+            document.getElementById("modalAuthor").textContent = "by " + book.author;
+            document.getElementById("modalCategory").textContent = book.category;
+            document.getElementById("modalDescription").textContent = book.description;
+            
+            const modalCover = document.getElementById("modalCover");
+            modalCover.className = `w-28 h-36 rounded-xl shadow-md mb-4 flex items-center justify-center text-white text-4xl ${book.color}`;
+
+            // Show the modal
+            const modal = document.getElementById("bookModal");
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+        }
+
+        function closeModal() {
+            const modal = document.getElementById("bookModal");
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+        }
+
+        // Close modal if user clicks outside the white box
+        document.getElementById("bookModal").addEventListener("click", function(event) {
+            if (event.target === this) {
+                closeModal();
+            }
+        });
+
+        // STEP 7: Run displayBooks() when the page first loads!
+        displayBooks(books);
+    </script>
+
+</body>
+</html>
+```
